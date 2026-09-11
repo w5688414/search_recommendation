@@ -25,11 +25,15 @@ class RankMixerConfig:
     epsilon: float = 1e-12
 
     def normalized_weights(self) -> tuple[float, float]:
+        if not isfinite(self.ctr_weight) or not isfinite(self.cvr_weight):
+            raise ValueError("ctr_weight and cvr_weight must be finite numbers")
         if self.ctr_weight < 0 or self.cvr_weight < 0:
             raise ValueError("ctr_weight and cvr_weight must be non-negative")
         total = self.ctr_weight + self.cvr_weight
         if total <= 0:
             raise ValueError("ctr_weight + cvr_weight must be positive")
+        if not isfinite(self.epsilon) or self.epsilon <= 0:
+            raise ValueError("epsilon must be a finite positive number")
         return self.ctr_weight / total, self.cvr_weight / total
 
 
