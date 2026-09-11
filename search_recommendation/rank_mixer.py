@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from math import exp, isfinite, log
 from typing import Iterable, Mapping, TypedDict
 
-CandidateValue = str | int | float | bool | None
+CandidateValue = str | int | float | None
 
 
 class RankedCandidate(TypedDict, total=False):
@@ -49,6 +49,8 @@ class RankMixer:
 
     @staticmethod
     def _to_float(name: str, value: CandidateValue) -> float:
+        if isinstance(value, bool):
+            raise ValueError(f"{name} must be numeric, got {value!r}")
         try:
             return float(value)
         except (TypeError, ValueError):

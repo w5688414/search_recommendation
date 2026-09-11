@@ -32,6 +32,8 @@ class RankMixerTests(unittest.TestCase):
             mixer.score(ctr=float("nan"), cvr=0.1)
         with self.assertRaisesRegex(ValueError, "ctr must be numeric"):
             mixer.score(ctr="not-a-number", cvr=0.1)
+        with self.assertRaisesRegex(ValueError, "ctr must be numeric"):
+            mixer.score(ctr=True, cvr=0.1)
 
     def test_weights_must_be_positive(self) -> None:
         with self.assertRaises(ValueError):
@@ -43,6 +45,8 @@ class RankMixerTests(unittest.TestCase):
         mixer = RankMixer()
         with self.assertRaisesRegex(ValueError, "ctr must be numeric"):
             mixer.rank([{"sku": "bad", "ctr": "NaN-ish", "cvr": 0.2}])
+        with self.assertRaisesRegex(ValueError, "ctr must be numeric"):
+            mixer.rank([{"sku": "bad", "ctr": True, "cvr": 0.2}])
 
     def test_rank_rejects_nan_candidate_probability(self) -> None:
         mixer = RankMixer()
