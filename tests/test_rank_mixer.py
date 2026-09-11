@@ -35,7 +35,7 @@ class RankMixerTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "ctr must be numeric"):
             mixer.score(ctr=True, cvr=0.1)
 
-    def test_weights_must_be_positive(self) -> None:
+    def test_weights_must_be_finite_non_negative_with_positive_total(self) -> None:
         with self.assertRaises(ValueError):
             RankMixer(RankMixerConfig(ctr_weight=0.0, cvr_weight=0.0))
         with self.assertRaises(ValueError):
@@ -44,6 +44,8 @@ class RankMixerTests(unittest.TestCase):
             RankMixer(RankMixerConfig(ctr_weight=float("nan"), cvr_weight=0.5))
         with self.assertRaises(ValueError):
             RankMixer(RankMixerConfig(ctr_weight=0.5, cvr_weight=float("inf")))
+        with self.assertRaises(ValueError):
+            RankMixer(RankMixerConfig(ctr_weight=True, cvr_weight=0.5))
 
     def test_epsilon_must_be_finite_positive(self) -> None:
         with self.assertRaises(ValueError):
@@ -52,6 +54,8 @@ class RankMixerTests(unittest.TestCase):
             RankMixer(RankMixerConfig(epsilon=-1e-9))
         with self.assertRaises(ValueError):
             RankMixer(RankMixerConfig(epsilon=float("nan")))
+        with self.assertRaises(ValueError):
+            RankMixer(RankMixerConfig(epsilon=True))
 
     def test_rank_rejects_non_numeric_candidate_probability(self) -> None:
         mixer = RankMixer()

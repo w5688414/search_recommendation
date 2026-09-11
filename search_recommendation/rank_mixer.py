@@ -25,6 +25,10 @@ class RankMixerConfig:
     epsilon: float = 1e-12
 
     def normalized_weights(self) -> tuple[float, float]:
+        if isinstance(self.ctr_weight, bool) or isinstance(self.cvr_weight, bool):
+            raise ValueError("ctr_weight and cvr_weight must be finite numbers")
+        if isinstance(self.epsilon, bool):
+            raise ValueError("epsilon must be a finite positive number")
         if not isfinite(self.ctr_weight) or not isfinite(self.cvr_weight):
             raise ValueError("ctr_weight and cvr_weight must be finite numbers")
         if self.ctr_weight < 0 or self.cvr_weight < 0:
@@ -79,6 +83,8 @@ class RankMixer:
             ctr = self._to_float("ctr", candidate["ctr"])
             cvr = self._to_float("cvr", candidate["cvr"])
             enriched: RankedCandidate = dict(candidate)
+            enriched["ctr"] = ctr
+            enriched["cvr"] = cvr
             enriched["rank_mixer_score"] = self.score(ctr=ctr, cvr=cvr)
             ranked.append(enriched)
         ranked.sort(key=lambda item: item["rank_mixer_score"], reverse=True)
