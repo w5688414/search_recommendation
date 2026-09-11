@@ -25,6 +25,8 @@ class RankMixerConfig:
     epsilon: float = 1e-12
 
     def normalized_weights(self) -> tuple[float, float]:
+        if self.ctr_weight < 0 or self.cvr_weight < 0:
+            raise ValueError("ctr_weight and cvr_weight must be non-negative")
         total = self.ctr_weight + self.cvr_weight
         if total <= 0:
             raise ValueError("ctr_weight + cvr_weight must be positive")
@@ -45,8 +47,17 @@ class RankMixer:
         if not 0.0 <= value <= 1.0:
             raise ValueError(f"{name} must be within [0, 1], got {value}")
 
-    def score(self, ctr: float, cvr: float) -> float:
+    @staticmethod
+    def _to_float(name: str, value: CandidateValue) -> float:
+        try:
+            return float(value)
+        except (TypeError, ValueError):
+            raise ValueError(f"{name} must be numeric, got {value!r}") from None
+
+    def score(self, ctr: CandidateValue, cvr: CandidateValue) -> float:
         """Weighted geometric blend of CTR and CVR probabilities."""
+        ctr = self._to_float("ctr", ctr)
+        cvr = self._to_float("cvr", cvr)
         self._validate_probability("ctr", ctr)
         self._validate_probability("cvr", cvr)
         ctr = max(ctr, self._config.epsilon)
@@ -59,14 +70,8 @@ class RankMixer:
         """Return enriched candidates sorted by rank_mixer_score (desc)."""
         ranked: list[RankedCandidate] = []
         for candidate in candidates:
-            try:
-                ctr = float(candidate["ctr"])
-            except (TypeError, ValueError):
-                raise ValueError(f"ctr must be numeric, got {candidate['ctr']!r}") from None
-            try:
-                cvr = float(candidate["cvr"])
-            except (TypeError, ValueError):
-                raise ValueError(f"cvr must be numeric, got {candidate['cvr']!r}") from None
+            ctr = self._to_float("ctr", candidate["ctr"])
+            cvr = self._to_float("cvr", candidate["cvr"])
             enriched: RankedCandidate = dict(candidate)
             enriched["rank_mixer_score"] = self.score(ctr=ctr, cvr=cvr)
             ranked.append(enriched)
