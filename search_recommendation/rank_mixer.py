@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from math import exp, log
+from math import exp, isfinite, log
 from typing import Iterable, Mapping, TypedDict
 
 CandidateValue = str | int | float | bool | None
@@ -40,6 +40,8 @@ class RankMixer:
 
     @staticmethod
     def _validate_probability(name: str, value: float) -> None:
+        if not isfinite(value):
+            raise ValueError(f"{name} must be a finite number, got {value}")
         if not 0.0 <= value <= 1.0:
             raise ValueError(f"{name} must be within [0, 1], got {value}")
 
@@ -57,8 +59,14 @@ class RankMixer:
         """Return enriched candidates sorted by rank_mixer_score (desc)."""
         ranked: list[RankedCandidate] = []
         for candidate in candidates:
-            ctr = float(candidate["ctr"])
-            cvr = float(candidate["cvr"])
+            try:
+                ctr = float(candidate["ctr"])
+            except (TypeError, ValueError):
+                raise ValueError(f"ctr must be numeric, got {candidate['ctr']!r}") from None
+            try:
+                cvr = float(candidate["cvr"])
+            except (TypeError, ValueError):
+                raise ValueError(f"cvr must be numeric, got {candidate['cvr']!r}") from None
             enriched: RankedCandidate = dict(candidate)
             enriched["rank_mixer_score"] = self.score(ctr=ctr, cvr=cvr)
             ranked.append(enriched)

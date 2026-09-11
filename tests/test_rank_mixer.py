@@ -35,8 +35,13 @@ class RankMixerTests(unittest.TestCase):
 
     def test_rank_rejects_non_numeric_candidate_probability(self) -> None:
         mixer = RankMixer()
-        with self.assertRaises(ValueError):
+        with self.assertRaisesRegex(ValueError, "ctr must be numeric"):
             mixer.rank([{"sku": "bad", "ctr": "NaN-ish", "cvr": 0.2}])
+
+    def test_rank_rejects_nan_candidate_probability(self) -> None:
+        mixer = RankMixer()
+        with self.assertRaisesRegex(ValueError, "finite number"):
+            mixer.rank([{"sku": "bad", "ctr": float("nan"), "cvr": 0.2}])
 
 
 if __name__ == "__main__":
