@@ -33,7 +33,11 @@ class RankMixerTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             RankMixer(RankMixerConfig(ctr_weight=0.0, cvr_weight=0.0))
 
+    def test_rank_rejects_non_numeric_candidate_probability(self) -> None:
+        mixer = RankMixer()
+        with self.assertRaises(ValueError):
+            mixer.rank([{"sku": "bad", "ctr": "NaN-ish", "cvr": 0.2}])
+
 
 if __name__ == "__main__":
     unittest.main()
-

@@ -4,9 +4,16 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from math import exp, log
-from typing import Iterable, Mapping
+from typing import Iterable, Mapping, TypedDict
 
 CandidateValue = str | int | float | bool | None
+
+
+class RankedCandidate(TypedDict, total=False):
+    ctr: float
+    cvr: float
+    sku: str
+    rank_mixer_score: float
 
 
 @dataclass(frozen=True)
@@ -46,13 +53,13 @@ class RankMixer:
 
     def rank(
         self, candidates: Iterable[Mapping[str, CandidateValue]]
-    ) -> list[dict[str, CandidateValue]]:
-        """Return candidates sorted by RankMixer score in descending order."""
-        ranked: list[dict[str, float]] = []
+    ) -> list[RankedCandidate]:
+        """Return enriched candidates sorted by rank_mixer_score (desc)."""
+        ranked: list[RankedCandidate] = []
         for candidate in candidates:
             ctr = float(candidate["ctr"])
             cvr = float(candidate["cvr"])
-            enriched = dict(candidate)
+            enriched: RankedCandidate = dict(candidate)
             enriched["rank_mixer_score"] = self.score(ctr=ctr, cvr=cvr)
             ranked.append(enriched)
         ranked.sort(key=lambda item: item["rank_mixer_score"], reverse=True)
