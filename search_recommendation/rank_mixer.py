@@ -24,21 +24,30 @@ class RankMixerConfig:
     cvr_weight: float = 0.5
     epsilon: float = 1e-12
 
+    @staticmethod
+    def _to_numeric(name: str, value: object) -> float:
+        if isinstance(value, (bool, str)):
+            raise ValueError(f"{name} must be a finite number")
+        try:
+            numeric = float(value)
+        except (TypeError, ValueError):
+            raise ValueError(f"{name} must be a finite number") from None
+        if not isfinite(numeric):
+            raise ValueError(f"{name} must be a finite number")
+        return numeric
+
     def normalized_weights(self) -> tuple[float, float]:
-        if isinstance(self.ctr_weight, bool) or isinstance(self.cvr_weight, bool):
-            raise ValueError("ctr_weight and cvr_weight must be finite numbers")
-        if isinstance(self.epsilon, bool):
-            raise ValueError("epsilon must be a finite positive number")
-        if not isfinite(self.ctr_weight) or not isfinite(self.cvr_weight):
-            raise ValueError("ctr_weight and cvr_weight must be finite numbers")
-        if self.ctr_weight < 0 or self.cvr_weight < 0:
+        ctr_weight = self._to_numeric("ctr_weight", self.ctr_weight)
+        cvr_weight = self._to_numeric("cvr_weight", self.cvr_weight)
+        epsilon = self._to_numeric("epsilon", self.epsilon)
+        if ctr_weight < 0 or cvr_weight < 0:
             raise ValueError("ctr_weight and cvr_weight must be non-negative")
-        total = self.ctr_weight + self.cvr_weight
+        total = ctr_weight + cvr_weight
         if total <= 0:
             raise ValueError("ctr_weight + cvr_weight must be positive")
-        if not isfinite(self.epsilon) or self.epsilon <= 0:
+        if epsilon <= 0:
             raise ValueError("epsilon must be a finite positive number")
-        return self.ctr_weight / total, self.cvr_weight / total
+        return ctr_weight / total, cvr_weight / total
 
 
 class RankMixer:
