@@ -6,6 +6,8 @@ from dataclasses import dataclass
 from math import exp, log
 from typing import Iterable, Mapping
 
+CandidateValue = str | int | float | bool | None
+
 
 @dataclass(frozen=True)
 class RankMixerConfig:
@@ -42,7 +44,9 @@ class RankMixer:
         cvr = max(cvr, self._config.epsilon)
         return exp(self._ctr_weight * log(ctr) + self._cvr_weight * log(cvr))
 
-    def rank(self, candidates: Iterable[Mapping[str, float]]) -> list[dict[str, float]]:
+    def rank(
+        self, candidates: Iterable[Mapping[str, CandidateValue]]
+    ) -> list[dict[str, CandidateValue]]:
         """Return candidates sorted by RankMixer score in descending order."""
         ranked: list[dict[str, float]] = []
         for candidate in candidates:
@@ -53,4 +57,3 @@ class RankMixer:
             ranked.append(enriched)
         ranked.sort(key=lambda item: item["rank_mixer_score"], reverse=True)
         return ranked
-
